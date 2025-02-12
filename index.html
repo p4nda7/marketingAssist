@@ -520,6 +520,60 @@
                 font-size: 16px; /* Verhindert Zoom auf iOS */
             }
         }
+
+        .emoji-picker {
+            position: absolute;
+            background: var(--card-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            z-index: 1000;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            max-width: 300px;
+        }
+
+        .emoji-btn {
+            background: none;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .emoji-btn:hover {
+            background-color: var(--background-color);
+            transform: scale(1.1);
+        }
+
+        .emoji-trigger {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: var(--accent-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: transform 0.2s;
+        }
+
+        .emoji-trigger:hover {
+            transform: scale(1.1);
+        }
+
+        .edit-input-wrapper {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -1029,6 +1083,97 @@ Greifen Sie schnell zu! 🛍️</textarea>
                 });
             });
         });
+
+        const emojis = [
+            '😊', '😂', '🥰', '😍', '🤩', '😎', '🥳', '🤗',
+            '👍', '🎉', '✨', '💫', '⭐', '🌟', '💥', '🔥',
+            '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤',
+            '🎁', '🎈', '🎀', '🎊', '🎯', '🎪', '🎨', '🎭',
+            '💰', '💎', '💝', '💖', '💗', '💓', '💞', '💕',
+            '🌈', '🌸', '🌺', '🌼', '🌻', '🍀', '🌹', '🌷'
+        ];
+
+        function startEditing(element) {
+            const type = element.dataset.type;
+            
+            if (type === 'text') {
+                const currentText = element.innerText;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'edit-input-wrapper';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentText;
+                input.className = 'edit-input';
+                
+                const emojiTrigger = document.createElement('div');
+                emojiTrigger.className = 'emoji-trigger';
+                emojiTrigger.innerHTML = '😊';
+                emojiTrigger.onclick = (e) => {
+                    e.stopPropagation();
+                    showEmojiPicker(input, wrapper);
+                };
+                
+                input.onblur = () => {
+                    setTimeout(() => {
+                        const picker = document.querySelector('.emoji-picker');
+                        if (!picker || !picker.contains(document.activeElement)) {
+                            element.innerText = input.value;
+                            wrapper.remove();
+                        }
+                    }, 200);
+                };
+                
+                wrapper.appendChild(input);
+                wrapper.appendChild(emojiTrigger);
+                element.innerText = '';
+                element.appendChild(wrapper);
+                input.focus();
+            } else if (type === 'img') {
+                const newSrc = prompt('Geben Sie die neue Bild-URL ein:', element.src);
+                if (newSrc) {
+                    element.src = newSrc;
+                }
+            }
+        }
+
+        function showEmojiPicker(input, wrapper) {
+            // Entferne vorhandene Emoji-Picker
+            const existingPicker = document.querySelector('.emoji-picker');
+            if (existingPicker) {
+                existingPicker.remove();
+            }
+
+            const picker = document.createElement('div');
+            picker.className = 'emoji-picker';
+            
+            emojis.forEach(emoji => {
+                const button = document.createElement('button');
+                button.className = 'emoji-btn';
+                button.innerHTML = emoji;
+                button.onclick = (e) => {
+                    e.preventDefault();
+                    const cursorPos = input.selectionStart;
+                    const textBefore = input.value.substring(0, cursorPos);
+                    const textAfter = input.value.substring(cursorPos);
+                    input.value = textBefore + emoji + textAfter;
+                    input.focus();
+                    input.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+                };
+                picker.appendChild(button);
+            });
+
+            // Positioniere den Picker unter dem Input
+            wrapper.appendChild(picker);
+
+            // Schließe den Picker wenn außerhalb geklickt wird
+            document.addEventListener('click', function closeEmojiPicker(e) {
+                if (!picker.contains(e.target) && !wrapper.contains(e.target)) {
+                    picker.remove();
+                    document.removeEventListener('click', closeEmojiPicker);
+                }
+            });
+        }
     </script>
 </body>
 </html>
