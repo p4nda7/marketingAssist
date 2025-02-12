@@ -5,124 +5,331 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produktwerbung</title>
     <style>
+        :root {
+            --primary-color: #FF69B4;      /* Hot Pink */
+            --primary-hover: #FF1493;      /* Deep Pink */
+            --secondary-color: #FFB6C1;    /* Light Pink */
+            --accent-color: #FFC0CB;       /* Pink */
+            --background-color: #FFF0F5;   /* Lavender Blush */
+            --card-color: white;
+            --shadow-color: rgba(255, 105, 180, 0.2);
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', 'Quicksand', Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-        }
-        .product-card {
-            background: white;
+            min-height: 100vh;
+            background-color: var(--background-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.3) 0%, transparent 25%),
+                radial-gradient(circle at 90% 80%, rgba(255, 105, 180, 0.2) 0%, transparent 25%);
+            margin: 0;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card {
+            background: var(--card-color);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px var(--shadow-color);
             text-align: center;
             max-width: 300px;
+            border: 3px solid var(--secondary-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        img {
-            max-width: 100%;
-            border-radius: 5px;
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
         }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px var(--shadow-color);
+        }
+
         .btn {
             display: inline-block;
-            margin-top: 10px;
-            padding: 10px 20px;
-            background: #007bff;
+            margin-top: 15px;
+            padding: 12px 25px;
+            background: var(--primary-color);
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 25px;
             cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 5px 15px var(--shadow-color);
         }
+
         .btn:hover {
-            background: #0056b3;
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow-color);
         }
+
         .edit-mode {
-            border: 2px dashed #007bff;
-            padding: 5px;
-            margin: 2px;
+            border: 2px dashed var(--primary-color);
+            padding: 8px;
+            margin: 4px;
             cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
         }
+
+        .edit-mode:hover {
+            background-color: var(--background-color);
+        }
+
         .edit-input {
             width: 100%;
-            padding: 5px;
-            margin: 2px 0;
-            border: 1px solid #007bff;
-            border-radius: 3px;
+            padding: 10px 45px 10px 15px;
+            border: 2px solid var(--secondary-color);
+            border-radius: 15px;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
+
+        .edit-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+
         .edit-controls {
             position: fixed;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .emoji-picker {
-            position: absolute;
-            background: white;
-            border: 2px solid #007bff;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-color);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            border: 2px solid var(--secondary-color);
             z-index: 1000;
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 5px;
-            max-width: 300px;
-            top: 100%;
-            left: 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
-        .emoji-btn {
-            background: none;
+        .tools-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-color);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            border: 2px solid var(--secondary-color);
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tools-container.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tool-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
             border: none;
-            padding: 5px;
             cursor: pointer;
-            font-size: 1.2em;
-            border-radius: 5px;
-            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px var(--shadow-color);
         }
 
-        .emoji-btn:hover {
-            background-color: #f0f0f0;
+        .tool-btn:hover {
             transform: scale(1.1);
+            background: var(--primary-hover);
         }
 
-        .emoji-trigger {
+        .tools-popup {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            border: 2px solid var(--secondary-color);
+            z-index: 999;
+            max-width: 90vw;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .template-btn {
+            width: 100%;
+            text-align: left;
+            padding: 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 10px;
+            background: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1em;
+        }
+
+        .template-btn:hover {
+            background: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .product-card {
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .edit-controls {
+                bottom: 20px;
+                top: auto;
+                width: 90%;
+                flex-direction: column;
+            }
+
+            .tools-container {
+                width: 90%;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .tools-popup {
+                width: 85vw;
+                bottom: 100px;
+            }
+
+            .product-card {
+                padding: 15px;
+                margin: 10px auto;
+            }
+
+            .tool-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.3em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .edit-controls,
+            .tools-container,
+            .tools-popup {
+                width: 95%;
+            }
+
+            .product-card {
+                width: 95%;
+                padding: 10px;
+            }
+
+            .tool-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1.2em;
+            }
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin: 15px 0;
+            font-size: 1.8em;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        strong {
+            color: var(--primary-color);
+        }
+
+        .marketing-dropdown {
             position: absolute;
-            right: 10px;
+            right: 50px;
             top: 50%;
             transform: translateY(-50%);
-            background: #007bff;
+            background: var(--primary-color);
             color: white;
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.2em;
-            transition: transform 0.2s;
+            font-size: 1.3em;
+            transition: all 0.3s ease;
             z-index: 1001;
+            box-shadow: 0 3px 10px var(--shadow-color);
         }
 
-        .emoji-trigger:hover {
+        .marketing-dropdown:hover {
             transform: translateY(-50%) scale(1.1);
-            background: #0056b3;
+            background: var(--primary-hover);
         }
 
-        .edit-input-wrapper {
-            position: relative;
+        .marketing-templates {
+            position: absolute;
+            background: var(--card-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            z-index: 1000;
+            width: 250px;
+            top: calc(100% + 10px);
+            right: 0;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .template-btn {
+            display: block;
             width: 100%;
-            margin-bottom: 150px;
+            padding: 10px;
+            margin: 5px 0;
+            text-align: left;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #666;
         }
 
-        .edit-input {
-            padding-right: 45px;
+        .template-btn:hover {
+            background-color: var(--background-color);
+            color: var(--primary-color);
         }
     </style>
 </head>
@@ -131,8 +338,12 @@
         <button onclick="toggleEditMode()" class="btn">Bearbeitungsmodus</button>
     </div>
     
+    <div class="tools-container" id="editTools">
+        <button class="tool-btn" onclick="showEmojiPicker()" title="Emojis">😊</button>
+        <button class="tool-btn" onclick="showMarketingTemplates()" title="Marketing Texte">📢</button>
+    </div>
+    
     <div class="product-card">
-        <img src="https://via.placeholder.com/250" alt="Produktbild" class="editable" data-type="img">
         <h2 class="editable" data-type="text">Produktname</h2>
         <p class="editable" data-type="text">Beschreibung des Produkts. Es ist ein großartiges Produkt!</p>
         <p><strong class="editable" data-type="text">Preis: 49,99€</strong></p>
@@ -151,9 +362,42 @@
             '🌈', '🌸', '🌺', '🌼', '🌻', '🍀', '🌹', '🌷'
         ];
 
+        const marketingTemplates = [
+            {
+                name: "🔥 Sonderangebot",
+                text: "🔥 MEGA DEAL! 🔥\nNur für kurze Zeit!\nJetzt zugreifen und sparen! ⚡️"
+            },
+            {
+                name: "✨ Exklusiv",
+                text: "✨ EXKLUSIVES ANGEBOT ✨\nFür unsere geschätzten Kunden!\nLassen Sie sich diese Gelegenheit nicht entgehen! 🌟"
+            },
+            {
+                name: "💝 Geschenkidee",
+                text: "🎁 Die PERFEKTE GESCHENKIDEE! 🎀\nÜberraschen Sie Ihre Liebsten!\nJetzt bestellen und Freude schenken! 💝"
+            },
+            {
+                name: "⭐️ Bestseller",
+                text: "⭐️ UNSER BESTSELLER! ⭐️\nTausende zufriedene Kunden!\nÜberzeugen Sie sich selbst! 🏆"
+            },
+            {
+                name: "🌟 Neu",
+                text: "🌟 BRANDNEU! 🌟\nEntdecken Sie unser neuestes Produkt!\nSeien Sie einer der Ersten! 🚀"
+            }
+        ];
+
         function toggleEditMode() {
             isEditMode = !isEditMode;
+            const editTools = document.getElementById('editTools');
             const editables = document.querySelectorAll('.editable');
+            
+            if (isEditMode) {
+                editTools.classList.add('visible');
+            } else {
+                editTools.classList.remove('visible');
+                // Schließe alle offenen Popups
+                const popups = document.querySelectorAll('.tools-popup');
+                popups.forEach(popup => popup.remove());
+            }
             
             editables.forEach(element => {
                 if (isEditMode) {
@@ -179,39 +423,9 @@
                 input.value = currentText;
                 input.className = 'edit-input';
                 
-                const emojiTrigger = document.createElement('div');
-                emojiTrigger.className = 'emoji-trigger';
-                emojiTrigger.innerHTML = '😊';
-                
-                let isEmojiPickerOpen = false;
-                
-                emojiTrigger.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                });
-                
-                emojiTrigger.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!isEmojiPickerOpen) {
-                        showEmojiPicker(input, wrapper, () => isEmojiPickerOpen = false);
-                        isEmojiPickerOpen = true;
-                    } else {
-                        const existingPicker = wrapper.querySelector('.emoji-picker');
-                        if (existingPicker) {
-                            existingPicker.remove();
-                        }
-                        isEmojiPickerOpen = false;
-                    }
-                });
-                
                 input.addEventListener('blur', (e) => {
                     setTimeout(() => {
-                        const picker = wrapper.querySelector('.emoji-picker');
-                        const activeElement = document.activeElement;
-                        
-                        if (!picker && 
-                            !wrapper.contains(activeElement) && 
-                            !emojiTrigger.contains(activeElement)) {
+                        if (!document.querySelector('.tools-popup')) {
                             element.innerText = input.value;
                             wrapper.remove();
                         }
@@ -219,7 +433,6 @@
                 });
                 
                 wrapper.appendChild(input);
-                wrapper.appendChild(emojiTrigger);
                 element.innerText = '';
                 element.appendChild(wrapper);
                 input.focus();
@@ -231,55 +444,74 @@
             }
         }
 
-        function showEmojiPicker(input, wrapper, onClose) {
-            const existingPicker = wrapper.querySelector('.emoji-picker');
-            if (existingPicker) {
-                existingPicker.remove();
-                return;
-            }
+        function showEmojiPicker() {
+            const existingPopup = document.querySelector('.tools-popup');
+            if (existingPopup) existingPopup.remove();
 
-            const picker = document.createElement('div');
-            picker.className = 'emoji-picker';
+            const popup = document.createElement('div');
+            popup.className = 'tools-popup';
             
             emojis.forEach(emoji => {
-                const button = document.createElement('button');
-                button.className = 'emoji-btn';
-                button.innerHTML = emoji;
-                
-                button.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const cursorPos = input.selectionStart;
-                    const textBefore = input.value.substring(0, cursorPos);
-                    const textAfter = input.value.substring(cursorPos);
-                    input.value = textBefore + emoji + textAfter;
-                    
-                    picker.remove();
-                    onClose?.();
-                    
-                    input.focus();
-                    input.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
-                });
-                
-                picker.appendChild(button);
+                const btn = document.createElement('button');
+                btn.className = 'template-btn';
+                btn.innerHTML = emoji;
+                btn.onclick = () => {
+                    const activeElement = document.activeElement;
+                    if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') {
+                        const cursorPos = activeElement.selectionStart;
+                        const textBefore = activeElement.value.substring(0, cursorPos);
+                        const textAfter = activeElement.value.substring(cursorPos);
+                        activeElement.value = textBefore + emoji + textAfter;
+                        activeElement.focus();
+                        activeElement.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+                        popup.remove();
+                    }
+                };
+                popup.appendChild(btn);
             });
 
-            wrapper.appendChild(picker);
-
-            const handleOutsideClick = (e) => {
-                if (!picker.contains(e.target) && 
-                    !input.contains(e.target) && 
-                    !wrapper.contains(e.target)) {
-                    picker.remove();
-                    onClose?.();
-                    document.removeEventListener('mousedown', handleOutsideClick);
+            document.body.appendChild(popup);
+            
+            // Schließe Popup bei Klick außerhalb
+            document.addEventListener('mousedown', function closePopup(e) {
+                if (!popup.contains(e.target)) {
+                    popup.remove();
+                    document.removeEventListener('mousedown', closePopup);
                 }
-            };
+            });
+        }
 
-            setTimeout(() => {
-                document.addEventListener('mousedown', handleOutsideClick);
-            }, 100);
+        function showMarketingTemplates() {
+            const existingPopup = document.querySelector('.tools-popup');
+            if (existingPopup) existingPopup.remove();
+
+            const popup = document.createElement('div');
+            popup.className = 'tools-popup';
+            
+            marketingTemplates.forEach(template => {
+                const btn = document.createElement('button');
+                btn.className = 'template-btn';
+                btn.innerHTML = template.name;
+                btn.onclick = () => {
+                    const activeElement = document.activeElement;
+                    if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') {
+                        activeElement.value = template.text;
+                        activeElement.focus();
+                        popup.remove();
+                    }
+                };
+                popup.appendChild(btn);
+            });
+
+            document.body.appendChild(popup);
+            
+            // Schließe Popup bei Klick außerhalb
+            document.addEventListener('mousedown', function closePopup(e) {
+                if (!popup.contains(e.target)) {
+                    popup.remove();
+                    document.removeEventListener('mousedown', closePopup);
+                }
+            });
         }
 
         function showMoreInfo() {
