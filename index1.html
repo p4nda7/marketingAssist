@@ -93,6 +93,12 @@
             background-color: var(--background-color);
         }
 
+        .edit-input-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
         .edit-input {
             width: 100%;
             padding: 10px 45px 10px 15px;
@@ -100,22 +106,17 @@
             border-radius: 15px;
             font-size: 1em;
             transition: all 0.3s ease;
-            min-height: 100px;  /* Mindesthöhe für textarea */
-            resize: vertical;   /* Erlaubt vertikales Resize */
-            font-family: inherit; /* Übernimmt die Schriftart von body */
-            line-height: 1.5;    /* Bessere Lesbarkeit */
+            min-height: 40px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
+            background: white;
         }
 
         .edit-input:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 10px var(--shadow-color);
-        }
-
-        .edit-input-wrapper {
-            position: relative;
-            width: 100%;
-            margin-bottom: 150px;
         }
 
         .edit-controls {
@@ -185,15 +186,22 @@
             left: 50%;
             transform: translateX(-50%);
             background: var(--card-color);
-            padding: 20px;
+            padding: 15px;
             border-radius: 15px;
             box-shadow: 0 5px 20px var(--shadow-color);
             border: 2px solid var(--secondary-color);
             z-index: 999;
             max-width: 90vw;
             width: 300px;
-            max-height: 400px;
+            max-height: 70vh;
             overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        @media (max-height: 600px) {
+            .tools-popup {
+                max-height: 50vh;
+            }
         }
 
         .template-btn {
@@ -213,6 +221,92 @@
         .template-btn:hover {
             background: var(--background-color);
             transform: scale(1.02);
+        }
+
+        .template-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: white;
+            margin-bottom: 10px;
+            border: 1px solid var(--secondary-color);
+        }
+
+        .template-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px var(--shadow-color);
+        }
+
+        .template-item .template-btn {
+            flex: 1;
+            padding: 8px;
+            margin: 0;
+            white-space: pre-wrap;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .template-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            font-size: 1.2em;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: var(--background-color);
+            transform: scale(1.1);
+        }
+
+        .template-btn.add-new {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            border-radius: 25px;
+        }
+
+        .template-btn.add-new:hover {
+            background: var(--primary-hover);
+            transform: scale(1.02);
+        }
+
+        /* Verbesserte Scrollbar-Styles */
+        .tools-popup::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .tools-popup::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        .tools-popup::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .tools-popup::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
         }
 
         @media (max-width: 768px) {
@@ -243,6 +337,29 @@
                 width: 40px;
                 height: 40px;
                 font-size: 1.3em;
+            }
+
+            .edit-input-wrapper {
+                margin-bottom: 5px;
+            }
+
+            .edit-input {
+                padding: 8px 35px 8px 12px;
+                font-size: 0.9em;
+            }
+
+            .template-item {
+                padding: 8px;
+            }
+
+            .template-item .template-btn {
+                font-size: 0.8em;
+            }
+
+            .action-btn {
+                width: 25px;
+                height: 25px;
+                font-size: 1em;
             }
         }
 
@@ -317,6 +434,8 @@
             top: calc(100% + 10px);
             right: 0;
             animation: fadeIn 0.3s ease;
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         .template-btn {
@@ -376,6 +495,17 @@
             background: var(--primary-hover);
             transform: scale(1.02);
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .marketing-templates .template-btn:hover {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+            transform: scale(1.02);
+        }
     </style>
 </head>
 <body>
@@ -403,30 +533,59 @@
             '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤',
             '🎁', '🎈', '🎀', '🎊', '🎯', '🎪', '🎨', '🎭',
             '💰', '💎', '💝', '💖', '💗', '💓', '💞', '💕',
-            '🌈', '🌸', '🌺', '🌼', '🌻', '🍀', '🌹', '🌷'
+            '🌈', '🌸', '🌺', '🌼', '🌻', '🍀', '🌹', '🌷',
+            '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🏃', '💪',
+            '👑', '💄', '👗', '👔', '👜', '👠', '🎵', '🎶',
+            '📱', '💻', '⌚', '📷', '🎮', '🎲', '🎸', '🎹',
+            '🍕', '🍔', '🍟', '🌭', '🍿', '🍩', '🍪', '🍰',
+            '✅', '❌', '❓', '❗', '💯', '📢', '🔔', '📌',
+            '🌍', '🌎', '🌏', '✈️', '🚗', '🏠', '🏢', '🌆',
+            '🎯', '🎪', '🎨', '🎭', '🎪', '🎢', '🎡', '🎠',
+            '💡', '⚡️', '🌟', '✨', '💫', '⭐️', '🌙', '☀️',
+            '🌈', '🌊', '🌸', '🌺', '🌼', '🌻', '🍀', '🌿'
         ];
 
         const SAVE_DELAY = 100;
         const DEFAULT_TEMPLATES = [
             {
-                name: "🔥 Sonderangebot",
-                text: "🔥 MEGA DEAL! 🔥\nNur für kurze Zeit!\nJetzt zugreifen und sparen! ⚡️"
+                name: "🌙 Elfenzauber Rabatt",
+                text: "🌙 MYSTISCHER MONDSCHEIN-RABATT! ✨\nDie Elfen des Handels gewähren magische 30% auf alle Waren!\nNur solange der Mondstaub glitzert! 🧝‍♀️"
             },
             {
-                name: "✨ Exklusiv",
-                text: "✨ EXKLUSIVES ANGEBOT ✨\nFür unsere geschätzten Kunden!\nLassen Sie sich diese Gelegenheit nicht entgehen! 🌟"
+                name: "🍄 Waldgeister Sale",
+                text: "🍄 WALDGEISTER FESTIVAL SALE! 🌿\nDie Weisen des Waldes flüstern von sagenhaften Preisen!\nEile herbei, bevor der Zauber verblasst! ⭐"
             },
             {
-                name: "💝 Geschenkidee",
-                text: "🎁 Die PERFEKTE GESCHENKIDEE! 🎀\nÜberraschen Sie Ihre Liebsten!\nJetzt bestellen und Freude schenken! 💝"
+                name: "🌈 Feenstaub Spezial", 
+                text: "🌈 FEENSTAUB SPEZIAL-ANGEBOT! 🧚‍♀️\nMit jedem Kauf streuen wir magischen Rabatt-Staub!\nLass dich verzaubern von märchenhaften Preisen! ✨"
             },
             {
-                name: "⭐️ Bestseller",
-                text: "⭐️ UNSER BESTSELLER! ⭐️\nTausende zufriedene Kunden!\nÜberzeugen Sie sich selbst! 🏆"
+                name: "⚔️ Legendärer Sale",
+                text: "⚔️ LEGENDÄRER ELFEN-SALE! 🏰\nDie uralten Schriftrollen sprechen von nie dagewesenen Rabatten!\nErgreife deine Chance, tapferer Kunde! 🌟"
             },
             {
-                name: "🌟 Neu",
-                text: "🌟 BRANDNEU! 🌟\nEntdecken Sie unser neuestes Produkt!\nSeien Sie einer der Ersten! 🚀"
+                name: "🌺 Blütenregen Rabatt",
+                text: "🌺 MAGISCHER BLÜTENREGEN-RABATT! 🌸\nDie Blumenelfen tanzen vor Freude über diese zauberhaften Preise!\nFolge dem Duft der Magie! 🧝‍♀️"
+            },
+            {
+                name: "🌟 Kristallzauber",
+                text: "🌟 KRISTALLZAUBER SPARWOCHE! 💎\nDie Edelsteinelfen haben ihre Schatzkammer geöffnet!\nEntdecke funkelnde Angebote im Licht der Sterne! ✨"
+            },
+            {
+                name: "🐉 Drachenschatz Deal",
+                text: "🐉 EPISCHER DRACHENSCHATZ DEAL! 💰\nDer mächtige Drache teilt seinen Goldschatz!\nFlammendes Angebot - Greif zu solange der Schatz glüht! 🔥"
+            },
+            {
+                name: "🧙‍♂️ Zauberer Spezial",
+                text: "🧙‍♂️ MAGISCHES ZAUBERER SPEZIAL! 📚\nDie weisen Magier haben ihre Zaubersprüche gesprochen!\nErlebe magische Preise die dich verzaubern werden! ⚡"
+            },
+            {
+                name: "🦄 Einhorn Angebot",
+                text: "🦄 EINHORN REGENBOGEN ANGEBOT! 🌈\nReite auf einer Welle magischer Rabatte!\nFange deinen Glücksmoment ein - Jetzt mit extra Einhornstaub! 💫"
+            },
+            {
+                name: "🎭 Maskerade Rabatt",
+                text: "🎭 MYSTISCHE MASKERADE RABATT! 🎪\nSchlüpfe in die Rolle des cleveren Sparfuchses!\nHinter jeder Maske verbirgt sich ein fantastischer Preis! 🎨"
             }
         ];
 
@@ -635,54 +794,32 @@
             };
             popup.appendChild(addNewBtn);
 
-            // Template Liste
-            templateManager.templates.forEach((template, index) => {
-                const templateDiv = document.createElement('div');
-                templateDiv.className = 'template-item';
+            // Benutzerdefinierte Templates
+            const userTemplates = templateManager.templates.filter(template => 
+                !DEFAULT_TEMPLATES.some(defaultTemplate => 
+                    defaultTemplate.name === template.name && 
+                    defaultTemplate.text === template.text
+                )
+            );
 
-                const btn = document.createElement('button');
-                btn.className = 'template-btn';
-                btn.innerHTML = `
-                    <div style="font-weight: bold; margin-bottom: 5px;">${template.name}</div>
-                    <div style="font-size: 0.9em; color: #666;">${template.text.split('\n')[0]}...</div>
-                `;
+            // Wenn benutzerdefinierte Templates existieren, zeige sie zuerst
+            if (userTemplates.length > 0) {
+                const userSection = document.createElement('div');
+                userSection.innerHTML = '<h3 style="color: var(--primary-color); margin: 15px 0 10px;">Meine Templates</h3>';
+                popup.appendChild(userSection);
 
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Finde die aktive Textarea
-                    const activeTextarea = document.querySelector('.edit-input-wrapper textarea');
-                    if (!activeTextarea) {
-                        alert('Bitte wählen Sie zuerst ein Textfeld aus.');
-                        return;
-                    }
-
-                    // Füge den Template-Text an der Cursor-Position ein
-                    const cursorPos = activeTextarea.selectionStart;
-                    const textBefore = activeTextarea.value.substring(0, cursorPos);
-                    const textAfter = activeTextarea.value.substring(cursorPos);
-                    activeTextarea.value = textBefore + template.text + textAfter;
-                    
-                    // Fokussiere die Textarea und setze den Cursor
-                    activeTextarea.focus();
-                    activeTextarea.setSelectionRange(
-                        cursorPos + template.text.length, 
-                        cursorPos + template.text.length
-                    );
-                    
-                    // Trigger das input Event für die automatische Höhenanpassung
-                    activeTextarea.dispatchEvent(new Event('input'));
-                    
-                    // Schließe das Popup
-                    popup.remove();
+                userTemplates.forEach((template, index) => {
+                    createTemplateElement(template, index, popup, true);
                 });
+            }
 
-                // Action Buttons
-                const actionButtons = createTemplateActionButtons(index, template);
-                templateDiv.appendChild(btn);
-                templateDiv.appendChild(actionButtons);
-                popup.appendChild(templateDiv);
+            // Standard Templates Sektion
+            const defaultSection = document.createElement('div');
+            defaultSection.innerHTML = '<h3 style="color: var(--primary-color); margin: 15px 0 10px;">Standard Templates</h3>';
+            popup.appendChild(defaultSection);
+
+            DEFAULT_TEMPLATES.forEach((template, index) => {
+                createTemplateElement(template, index, popup, false);
             });
 
             document.body.appendChild(popup);
@@ -694,6 +831,54 @@
                     document.removeEventListener('mousedown', closePopup);
                 }
             });
+        }
+
+        // Hilfsfunktion zum Erstellen der Template-Elemente
+        function createTemplateElement(template, index, popup, isUserTemplate) {
+            const templateDiv = document.createElement('div');
+            templateDiv.className = 'template-item';
+
+            const btn = document.createElement('button');
+            btn.className = 'template-btn';
+            btn.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 5px;">${template.name}</div>
+                <div style="font-size: 0.9em; color: #666;">${template.text.split('\n')[0]}...</div>
+            `;
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const activeTextarea = document.querySelector('.edit-input-wrapper textarea');
+                if (!activeTextarea) {
+                    alert('Bitte wählen Sie zuerst ein Textfeld aus.');
+                    return;
+                }
+
+                const cursorPos = activeTextarea.selectionStart;
+                const textBefore = activeTextarea.value.substring(0, cursorPos);
+                const textAfter = activeTextarea.value.substring(cursorPos);
+                activeTextarea.value = textBefore + template.text + textAfter;
+                
+                activeTextarea.focus();
+                activeTextarea.setSelectionRange(
+                    cursorPos + template.text.length, 
+                    cursorPos + template.text.length
+                );
+                
+                activeTextarea.dispatchEvent(new Event('input'));
+                popup.remove();
+            });
+
+            templateDiv.appendChild(btn);
+
+            // Füge Action-Buttons nur für benutzerdefinierte Templates hinzu
+            if (isUserTemplate) {
+                const actionButtons = createTemplateActionButtons(index, template);
+                templateDiv.appendChild(actionButtons);
+            }
+
+            popup.appendChild(templateDiv);
         }
 
         function createTemplateActionButtons(index, template) {
