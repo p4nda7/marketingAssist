@@ -646,23 +646,30 @@
             const editTools = document.getElementById('editTools');
             const editables = document.querySelectorAll('.editable');
             
-            if (isEditMode) {
-                editTools.classList.add('visible');
-            } else {
-                editTools.classList.remove('visible');
-                // Schließe alle offenen Popups
-                const popups = document.querySelectorAll('.tools-popup');
-                popups.forEach(popup => popup.remove());
+            // Toggle Tools Visibility
+            editTools.classList.toggle('visible', isEditMode);
+            
+            if (!isEditMode) {
+                // Schließe alle offenen Editoren und Popups
+                document.querySelectorAll('.edit-input-wrapper').forEach(wrapper => {
+                    const element = wrapper.closest('.editable');
+                    if (element) {
+                        const input = wrapper.querySelector('textarea');
+                        if (input) {
+                            element.textContent = input.value.trim();
+                        }
+                        wrapper.remove();
+                    }
+                });
+                
+                // Entferne alle Popups
+                document.querySelectorAll('.tools-popup').forEach(popup => popup.remove());
             }
             
+            // Toggle Edit Mode für alle editierbaren Elemente
             editables.forEach(element => {
-                if (isEditMode) {
-                    element.classList.add('edit-mode');
-                    element.onclick = () => startEditing(element);
-                } else {
-                    element.classList.remove('edit-mode');
-                    element.onclick = null;
-                }
+                element.classList.toggle('edit-mode', isEditMode);
+                element.onclick = isEditMode ? () => startEditing(element) : null;
             });
         }
 
@@ -671,47 +678,82 @@
             input.value = initialText;
             input.className = 'edit-input';
 
-            input.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
+            // Automatische Höhenanpassung
+            const adjustHeight = () => {
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+            };
+
+            input.addEventListener('input', adjustHeight);
+            input.addEventListener('blur', (e) => {
+                if (onBlur) onBlur(e);
             });
 
-            if (onBlur) {
-                input.addEventListener('blur', onBlur);
-            }
-
             // Initiale Höhenanpassung
-            setTimeout(() => {
-                input.style.height = 'auto';
-                input.style.height = (input.scrollHeight) + 'px';
-            }, 0);
+            setTimeout(adjustHeight, 0);
 
             return input;
         }
 
         function startEditing(element) {
             if (element.dataset.type !== 'text') return;
+            
+            // Verhindere mehrfaches Öffnen des Editors
+            if (element.querySelector('.edit-input-wrapper')) return;
 
-            const currentText = element.innerText;
+            const currentText = element.textContent.trim();
             const wrapper = document.createElement('div');
             wrapper.className = 'edit-input-wrapper';
 
             const input = createTextArea(currentText, (e) => {
-                // Verzögerung erhöht für bessere Benutzerfreundlichkeit
+                // Verzögerung für bessere UX
                 setTimeout(() => {
                     const toolsPopup = document.querySelector('.tools-popup');
                     const emojiPicker = document.querySelector('.emoji-picker');
+                    
+                    // Prüfe ob ein Popup offen ist
                     if (!toolsPopup && !emojiPicker) {
-                        element.innerText = input.value;
+                        const newText = input.value.trim();
+                        
+                        // Entferne den Editor
                         wrapper.remove();
+                        
+                        // Aktualisiere den Text nur wenn er sich geändert hat
+                        if (newText !== currentText) {
+                            // Speichere den ursprünglichen HTML-Inhalt
+                            const originalHTML = element.innerHTML;
+                            element.textContent = newText;
+                            
+                            // Trigger ein Custom Event für die Änderung
+                            element.dispatchEvent(new CustomEvent('contentChanged', {
+                                detail: { oldText: currentText, newText }
+                            }));
+                        }
                     }
                 }, SAVE_DELAY);
             });
 
+            // Speichern bei Enter + Strg/Cmd
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    input.blur(); // Trigger blur event
+                }
+            });
+
             wrapper.appendChild(input);
-            element.innerHTML = ''; // Verwende innerHTML statt innerText
+            
+            // Speichere den aktuellen Inhalt temporär
+            const tempContent = element.textContent;
+            element.textContent = '';
             element.appendChild(wrapper);
+            
+            // Fokussiere das Input-Feld
             input.focus();
+            
+            // Setze die Höhe des Textareas
+            input.style.height = 'auto';
+            input.style.height = input.scrollHeight + 'px';
         }
 
         function showEmojiPicker() {
