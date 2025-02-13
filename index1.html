@@ -87,10 +87,20 @@
             cursor: pointer;
             border-radius: 10px;
             transition: all 0.3s ease;
+            white-space: pre-wrap;
+            text-align: center;
+            display: block;
         }
 
         .edit-mode:hover {
             background-color: var(--background-color);
+        }
+
+        .edit-mode ul, 
+        .edit-mode ol {
+            text-align: left;
+            display: inline-block;
+            margin: 0 auto;
         }
 
         .edit-input-wrapper {
@@ -111,6 +121,8 @@
             font-family: inherit;
             line-height: 1.5;
             background: white;
+            white-space: pre-wrap;
+            text-align: center;
         }
 
         .edit-input:focus {
@@ -122,8 +134,7 @@
         .edit-controls {
             position: fixed;
             top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 20px;
             background: var(--card-color);
             padding: 15px;
             border-radius: 15px;
@@ -133,7 +144,7 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: flex-end;
         }
 
         .tools-container {
@@ -506,6 +517,37 @@
             color: var(--primary-color);
             transform: scale(1.02);
         }
+
+        /* Spezielle Formatierung für die Produktkarte */
+        .product-card h2.editable {
+            text-align: center !important;
+        }
+
+        .product-card p.editable {
+            text-align: center;
+        }
+
+        .product-card strong.editable {
+            text-align: center !important;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* Für Listen innerhalb der Produktkarte */
+        .product-card .editable ul,
+        .product-card .editable ol {
+            text-align: left;
+            display: inline-block;
+            margin: 0 auto;
+            padding-left: 20px;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
     </style>
 </head>
 <body>
@@ -546,6 +588,7 @@
         ];
 
         const SAVE_DELAY = 100;
+        const AUTOSAVE_DELAY = 1000; // 1 Sekunde
         const DEFAULT_TEMPLATES = [
             {
                 name: "🌙 Elfenzauber Rabatt",
@@ -706,38 +749,50 @@
             wrapper.className = 'edit-input-wrapper';
 
             const input = createTextArea(currentText, (e) => {
-                // Verzögerung für bessere UX
                 setTimeout(() => {
                     const toolsPopup = document.querySelector('.tools-popup');
                     const emojiPicker = document.querySelector('.emoji-picker');
                     
-                    // Prüfe ob ein Popup offen ist
                     if (!toolsPopup && !emojiPicker) {
                         const newText = input.value.trim();
                         
-                        // Entferne den Editor
                         wrapper.remove();
                         
-                        // Aktualisiere den Text nur wenn er sich geändert hat
                         if (newText !== currentText) {
-                            // Speichere den ursprünglichen HTML-Inhalt
-                            const originalHTML = element.innerHTML;
                             element.textContent = newText;
                             
-                            // Trigger ein Custom Event für die Änderung
+                            if (newText.includes('\n')) {
+                                element.style.whiteSpace = 'pre-wrap';
+                            } else {
+                                element.style.whiteSpace = '';
+                            }
+                            
                             element.dispatchEvent(new CustomEvent('contentChanged', {
                                 detail: { oldText: currentText, newText }
                             }));
+                            
+                            // Automatisches Speichern nach Änderung
+                            saveCurrentState();
                         }
                     }
                 }, SAVE_DELAY);
             });
 
-            // Speichern bei Enter + Strg/Cmd
+            // Autosave während der Eingabe
+            let autosaveTimeout;
+            input.addEventListener('input', () => {
+                clearTimeout(autosaveTimeout);
+                autosaveTimeout = setTimeout(() => {
+                    const tempElement = element.cloneNode(true);
+                    tempElement.textContent = input.value;
+                    saveCurrentState();
+                }, AUTOSAVE_DELAY);
+            });
+
+            // Erlaube Zeilenumbrüche mit Enter
             input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    input.blur(); // Trigger blur event
+                if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+                    e.stopPropagation(); // Verhindere Formular-Submit
                 }
             });
 
@@ -957,6 +1012,67 @@
             actionButtons.appendChild(deleteBtn);
             return actionButtons;
         }
+
+        // Funktion zum Laden des gespeicherten Zustands
+        function loadSavedState() {
+            try {
+                const savedState = localStorage.getItem('productCardState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    document.querySelectorAll('.editable').forEach(element => {
+                        const key = element.tagName + (element.className.replace('editable', '').trim() || '');
+                        if (state[key]) {
+                            element.textContent = state[key];
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden des Zustands:', error);
+            }
+        }
+
+        // Funktion zum Speichern des aktuellen Zustands
+        function saveCurrentState() {
+            try {
+                const state = {};
+                document.querySelectorAll('.editable').forEach(element => {
+                    const key = element.tagName + (element.className.replace('editable', '').trim() || '');
+                    state[key] = element.textContent;
+                });
+                localStorage.setItem('productCardState', JSON.stringify(state));
+                
+                // Zeige kurze Bestätigung
+                const saveConfirm = document.createElement('div');
+                saveConfirm.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: var(--primary-color);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    box-shadow: 0 2px 10px var(--shadow-color);
+                    animation: fadeInOut 2s ease forwards;
+                    z-index: 1000;
+                `;
+                saveConfirm.textContent = '✓ Gespeichert';
+                document.body.appendChild(saveConfirm);
+                
+                setTimeout(() => saveConfirm.remove(), 2000);
+            } catch (error) {
+                console.error('Fehler beim Speichern des Zustands:', error);
+            }
+        }
+
+        // Lade gespeicherten Zustand beim Start
+        document.addEventListener('DOMContentLoaded', loadSavedState);
+
+        // Füge Speicher-Button zur Toolbar hinzu
+        document.querySelector('.edit-controls').innerHTML += `
+            <button onclick="saveCurrentState()" class="btn" style="margin-left: 10px;">
+                💾 Speichern
+            </button>
+        `;
     </script>
 </body>
 </html>
