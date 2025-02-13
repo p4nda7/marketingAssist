@@ -31,13 +31,13 @@
 
         .product-card {
             background: var(--card-color);
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 25px var(--shadow-color);
             text-align: center;
-            width: 90%;
-            max-width: 400px;
-            margin: 20px auto;
             border: 3px solid var(--secondary-color);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
@@ -213,13 +213,6 @@
         .template-btn:hover {
             background: var(--background-color);
             transform: scale(1.02);
-        }
-
-        .product-card {
-            width: 90%;
-            max-width: 400px;
-            margin: 20px auto;
-            padding: 20px;
         }
 
         @media (max-width: 768px) {
@@ -443,27 +436,47 @@
             }
 
             loadTemplates() {
-                const saved = localStorage.getItem('marketingTemplates');
-                return saved ? JSON.parse(saved) : DEFAULT_TEMPLATES;
+                try {
+                    const saved = localStorage.getItem('marketingTemplates');
+                    return saved ? JSON.parse(saved) : DEFAULT_TEMPLATES;
+                } catch (error) {
+                    console.error('Fehler beim Laden der Templates:', error);
+                    return DEFAULT_TEMPLATES;
+                }
             }
 
             saveTemplates() {
-                localStorage.setItem('marketingTemplates', JSON.stringify(this.templates));
+                try {
+                    localStorage.setItem('marketingTemplates', JSON.stringify(this.templates));
+                } catch (error) {
+                    console.error('Fehler beim Speichern der Templates:', error);
+                }
             }
 
             addTemplate(name, text) {
+                if (!name?.trim() || !text?.trim()) return false;
                 this.templates.push({ name, text });
                 this.saveTemplates();
+                return true;
             }
 
             editTemplate(index, name, text) {
-                this.templates[index] = { name, text };
-                this.saveTemplates();
+                if (!name?.trim() || !text?.trim()) return false;
+                if (index >= 0 && index < this.templates.length) {
+                    this.templates[index] = { name, text };
+                    this.saveTemplates();
+                    return true;
+                }
+                return false;
             }
 
             deleteTemplate(index) {
-                this.templates.splice(index, 1);
-                this.saveTemplates();
+                if (index >= 0 && index < this.templates.length) {
+                    this.templates.splice(index, 1);
+                    this.saveTemplates();
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -525,8 +538,11 @@
             wrapper.className = 'edit-input-wrapper';
 
             const input = createTextArea(currentText, (e) => {
+                // Verzögerung erhöht für bessere Benutzerfreundlichkeit
                 setTimeout(() => {
-                    if (!document.querySelector('.tools-popup')) {
+                    const toolsPopup = document.querySelector('.tools-popup');
+                    const emojiPicker = document.querySelector('.emoji-picker');
+                    if (!toolsPopup && !emojiPicker) {
                         element.innerText = input.value;
                         wrapper.remove();
                     }
@@ -534,7 +550,7 @@
             });
 
             wrapper.appendChild(input);
-            element.innerText = '';
+            element.innerHTML = ''; // Verwende innerHTML statt innerText
             element.appendChild(wrapper);
             input.focus();
         }
@@ -595,7 +611,10 @@
 
         function showMarketingTemplates() {
             const existingPopup = document.querySelector('.tools-popup');
-            if (existingPopup) existingPopup.remove();
+            if (existingPopup) {
+                existingPopup.remove();
+                return;
+            }
 
             const popup = document.createElement('div');
             popup.className = 'tools-popup';
@@ -628,39 +647,56 @@
                     <div style="font-size: 0.9em; color: #666;">${template.text.split('\n')[0]}...</div>
                 `;
 
-                btn.addEventListener('mousedown', (e) => {
+                btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-
-                    // Finde das aktiv markierte Element (das gerade bearbeitet wird)
-                    const activeElement = document.querySelector('.editable.edit-mode:focus-within');
-                    if (!activeElement) {
+                    
+                    // Finde die aktive Textarea
+                    const activeTextarea = document.querySelector('.edit-input-wrapper textarea');
+                    if (!activeTextarea) {
                         alert('Bitte wählen Sie zuerst ein Textfeld aus.');
                         return;
                     }
 
-                    // Setze den Text direkt in das Element
-                    activeElement.innerText = template.text;
+                    // Füge den Template-Text an der Cursor-Position ein
+                    const cursorPos = activeTextarea.selectionStart;
+                    const textBefore = activeTextarea.value.substring(0, cursorPos);
+                    const textAfter = activeTextarea.value.substring(cursorPos);
+                    activeTextarea.value = textBefore + template.text + textAfter;
                     
-                    // Starte den Bearbeitungsmodus für dieses Element
-                    startEditing(activeElement);
+                    // Fokussiere die Textarea und setze den Cursor
+                    activeTextarea.focus();
+                    activeTextarea.setSelectionRange(
+                        cursorPos + template.text.length, 
+                        cursorPos + template.text.length
+                    );
+                    
+                    // Trigger das input Event für die automatische Höhenanpassung
+                    activeTextarea.dispatchEvent(new Event('input'));
                     
                     // Schließe das Popup
                     popup.remove();
                 });
 
                 // Action Buttons
-                const actionButtons = createTemplateActionButtons(index, template, popup);
+                const actionButtons = createTemplateActionButtons(index, template);
                 templateDiv.appendChild(btn);
                 templateDiv.appendChild(actionButtons);
                 popup.appendChild(templateDiv);
             });
 
             document.body.appendChild(popup);
-            addPopupCloseHandler(popup);
+            
+            // Schließe Popup bei Klick außerhalb
+            document.addEventListener('mousedown', function closePopup(e) {
+                if (!popup.contains(e.target) && !e.target.closest('.tool-btn')) {
+                    popup.remove();
+                    document.removeEventListener('mousedown', closePopup);
+                }
+            });
         }
 
-        function createTemplateActionButtons(index, template, popup) {
+        function createTemplateActionButtons(index, template) {
             const actionButtons = document.createElement('div');
             actionButtons.className = 'template-actions';
 
@@ -693,15 +729,6 @@
             actionButtons.appendChild(editBtn);
             actionButtons.appendChild(deleteBtn);
             return actionButtons;
-        }
-
-        function addPopupCloseHandler(popup) {
-            document.addEventListener('mousedown', function closePopup(e) {
-                if (!popup.contains(e.target)) {
-                    popup.remove();
-                    document.removeEventListener('mousedown', closePopup);
-                }
-            });
         }
     </script>
 </body>
