@@ -35,7 +35,9 @@
             border-radius: 20px;
             box-shadow: 0 10px 25px var(--shadow-color);
             text-align: center;
-            max-width: 300px;
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
             border: 3px solid var(--secondary-color);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
@@ -98,12 +100,22 @@
             border-radius: 15px;
             font-size: 1em;
             transition: all 0.3s ease;
+            min-height: 100px;  /* Mindesthöhe für textarea */
+            resize: vertical;   /* Erlaubt vertikales Resize */
+            font-family: inherit; /* Übernimmt die Schriftart von body */
+            line-height: 1.5;    /* Bessere Lesbarkeit */
         }
 
         .edit-input:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 10px var(--shadow-color);
+        }
+
+        .edit-input-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 150px;
         }
 
         .edit-controls {
@@ -187,7 +199,7 @@
         .template-btn {
             width: 100%;
             text-align: left;
-            padding: 12px;
+            padding: 15px;
             margin: 5px 0;
             border: none;
             border-radius: 10px;
@@ -195,11 +207,12 @@
             cursor: pointer;
             transition: all 0.2s ease;
             font-size: 1em;
+            white-space: pre-line;
         }
 
         .template-btn:hover {
             background: var(--background-color);
-            color: var(--primary-color);
+            transform: scale(1.02);
         }
 
         .product-card {
@@ -331,6 +344,45 @@
             background-color: var(--background-color);
             color: var(--primary-color);
         }
+
+        .template-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 10px;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            font-size: 1.2em;
+        }
+
+        .action-btn:hover {
+            background: var(--background-color);
+            transform: scale(1.1);
+        }
+
+        .template-btn.add-new {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .template-btn.add-new:hover {
+            background: var(--primary-hover);
+            transform: scale(1.02);
+        }
     </style>
 </head>
 <body>
@@ -347,7 +399,6 @@
         <h2 class="editable" data-type="text">Produktname</h2>
         <p class="editable" data-type="text">Beschreibung des Produkts. Es ist ein großartiges Produkt!</p>
         <p><strong class="editable" data-type="text">Preis: 49,99€</strong></p>
-        <a href="#" class="btn editable" data-type="text" onclick="showMoreInfo()">Mehr erfahren</a>
     </div>
     
     <script>
@@ -362,7 +413,8 @@
             '🌈', '🌸', '🌺', '🌼', '🌻', '🍀', '🌹', '🌷'
         ];
 
-        const marketingTemplates = [
+        const SAVE_DELAY = 100;
+        const DEFAULT_TEMPLATES = [
             {
                 name: "🔥 Sonderangebot",
                 text: "🔥 MEGA DEAL! 🔥\nNur für kurze Zeit!\nJetzt zugreifen und sparen! ⚡️"
@@ -384,6 +436,38 @@
                 text: "🌟 BRANDNEU! 🌟\nEntdecken Sie unser neuestes Produkt!\nSeien Sie einer der Ersten! 🚀"
             }
         ];
+
+        class TemplateManager {
+            constructor() {
+                this.templates = this.loadTemplates();
+            }
+
+            loadTemplates() {
+                const saved = localStorage.getItem('marketingTemplates');
+                return saved ? JSON.parse(saved) : DEFAULT_TEMPLATES;
+            }
+
+            saveTemplates() {
+                localStorage.setItem('marketingTemplates', JSON.stringify(this.templates));
+            }
+
+            addTemplate(name, text) {
+                this.templates.push({ name, text });
+                this.saveTemplates();
+            }
+
+            editTemplate(index, name, text) {
+                this.templates[index] = { name, text };
+                this.saveTemplates();
+            }
+
+            deleteTemplate(index) {
+                this.templates.splice(index, 1);
+                this.saveTemplates();
+            }
+        }
+
+        const templateManager = new TemplateManager();
 
         function toggleEditMode() {
             isEditMode = !isEditMode;
@@ -410,38 +494,49 @@
             });
         }
 
-        function startEditing(element) {
-            const type = element.dataset.type;
-            
-            if (type === 'text') {
-                const currentText = element.innerText;
-                const wrapper = document.createElement('div');
-                wrapper.className = 'edit-input-wrapper';
-                
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = currentText;
-                input.className = 'edit-input';
-                
-                input.addEventListener('blur', (e) => {
-                    setTimeout(() => {
-                        if (!document.querySelector('.tools-popup')) {
-                            element.innerText = input.value;
-                            wrapper.remove();
-                        }
-                    }, 100);
-                });
-                
-                wrapper.appendChild(input);
-                element.innerText = '';
-                element.appendChild(wrapper);
-                input.focus();
-            } else if (type === 'img') {
-                const newSrc = prompt('Geben Sie die neue Bild-URL ein:', element.src);
-                if (newSrc) {
-                    element.src = newSrc;
-                }
+        function createTextArea(initialText, onBlur) {
+            const input = document.createElement('textarea');
+            input.value = initialText;
+            input.className = 'edit-input';
+
+            input.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            if (onBlur) {
+                input.addEventListener('blur', onBlur);
             }
+
+            // Initiale Höhenanpassung
+            setTimeout(() => {
+                input.style.height = 'auto';
+                input.style.height = (input.scrollHeight) + 'px';
+            }, 0);
+
+            return input;
+        }
+
+        function startEditing(element) {
+            if (element.dataset.type !== 'text') return;
+
+            const currentText = element.innerText;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'edit-input-wrapper';
+
+            const input = createTextArea(currentText, (e) => {
+                setTimeout(() => {
+                    if (!document.querySelector('.tools-popup')) {
+                        element.innerText = input.value;
+                        wrapper.remove();
+                    }
+                }, SAVE_DELAY);
+            });
+
+            wrapper.appendChild(input);
+            element.innerText = '';
+            element.appendChild(wrapper);
+            input.focus();
         }
 
         function showEmojiPicker() {
@@ -455,18 +550,35 @@
                 const btn = document.createElement('button');
                 btn.className = 'template-btn';
                 btn.innerHTML = emoji;
-                btn.onclick = () => {
-                    const activeElement = document.activeElement;
-                    if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') {
-                        const cursorPos = activeElement.selectionStart;
-                        const textBefore = activeElement.value.substring(0, cursorPos);
-                        const textAfter = activeElement.value.substring(cursorPos);
-                        activeElement.value = textBefore + emoji + textAfter;
-                        activeElement.focus();
-                        activeElement.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
-                        popup.remove();
+                
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Finde die aktive Textarea
+                    const activeTextarea = document.querySelector('.edit-input-wrapper textarea');
+                    if (!activeTextarea) {
+                        alert('Bitte wählen Sie zuerst ein Textfeld aus.');
+                        return;
                     }
-                };
+
+                    // Füge das Emoji an der Cursor-Position ein
+                    const cursorPos = activeTextarea.selectionStart;
+                    const textBefore = activeTextarea.value.substring(0, cursorPos);
+                    const textAfter = activeTextarea.value.substring(cursorPos);
+                    activeTextarea.value = textBefore + emoji + textAfter;
+                    
+                    // Fokussiere die Textarea und setze den Cursor
+                    activeTextarea.focus();
+                    activeTextarea.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+                    
+                    // Trigger das input Event für die automatische Höhenanpassung
+                    activeTextarea.dispatchEvent(new Event('input'));
+                    
+                    // Schließe das Popup
+                    popup.remove();
+                });
+                
                 popup.appendChild(btn);
             });
 
@@ -487,37 +599,109 @@
 
             const popup = document.createElement('div');
             popup.className = 'tools-popup';
-            
-            marketingTemplates.forEach(template => {
+
+            // Neues Template Button
+            const addNewBtn = document.createElement('button');
+            addNewBtn.className = 'template-btn add-new';
+            addNewBtn.innerHTML = '➕ Neues Template erstellen';
+            addNewBtn.onclick = () => {
+                const name = prompt('Name des Templates:');
+                if (name?.trim()) {
+                    const text = prompt('Text des Templates:');
+                    if (text?.trim()) {
+                        templateManager.addTemplate(name, text);
+                        showMarketingTemplates();
+                    }
+                }
+            };
+            popup.appendChild(addNewBtn);
+
+            // Template Liste
+            templateManager.templates.forEach((template, index) => {
+                const templateDiv = document.createElement('div');
+                templateDiv.className = 'template-item';
+
                 const btn = document.createElement('button');
                 btn.className = 'template-btn';
-                btn.innerHTML = template.name;
-                btn.onclick = () => {
-                    const activeElement = document.activeElement;
-                    if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') {
-                        activeElement.value = template.text;
-                        activeElement.focus();
-                        popup.remove();
+                btn.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 5px;">${template.name}</div>
+                    <div style="font-size: 0.9em; color: #666;">${template.text.split('\n')[0]}...</div>
+                `;
+
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Finde das aktiv markierte Element (das gerade bearbeitet wird)
+                    const activeElement = document.querySelector('.editable.edit-mode:focus-within');
+                    if (!activeElement) {
+                        alert('Bitte wählen Sie zuerst ein Textfeld aus.');
+                        return;
                     }
-                };
-                popup.appendChild(btn);
+
+                    // Setze den Text direkt in das Element
+                    activeElement.innerText = template.text;
+                    
+                    // Starte den Bearbeitungsmodus für dieses Element
+                    startEditing(activeElement);
+                    
+                    // Schließe das Popup
+                    popup.remove();
+                });
+
+                // Action Buttons
+                const actionButtons = createTemplateActionButtons(index, template, popup);
+                templateDiv.appendChild(btn);
+                templateDiv.appendChild(actionButtons);
+                popup.appendChild(templateDiv);
             });
 
             document.body.appendChild(popup);
-            
-            // Schließe Popup bei Klick außerhalb
+            addPopupCloseHandler(popup);
+        }
+
+        function createTemplateActionButtons(index, template, popup) {
+            const actionButtons = document.createElement('div');
+            actionButtons.className = 'template-actions';
+
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '✏️';
+            editBtn.className = 'action-btn';
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                const newName = prompt('Name des Templates:', template.name);
+                if (newName?.trim()) {
+                    const newText = prompt('Text des Templates:', template.text);
+                    if (newText?.trim()) {
+                        templateManager.editTemplate(index, newName, newText);
+                        showMarketingTemplates();
+                    }
+                }
+            };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.className = 'action-btn';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm('Template wirklich löschen?')) {
+                    templateManager.deleteTemplate(index);
+                    showMarketingTemplates();
+                }
+            };
+
+            actionButtons.appendChild(editBtn);
+            actionButtons.appendChild(deleteBtn);
+            return actionButtons;
+        }
+
+        function addPopupCloseHandler(popup) {
             document.addEventListener('mousedown', function closePopup(e) {
                 if (!popup.contains(e.target)) {
                     popup.remove();
                     document.removeEventListener('mousedown', closePopup);
                 }
             });
-        }
-
-        function showMoreInfo() {
-            if (!isEditMode) {
-                alert("Weitere Informationen zu diesem Produkt sind bald verfügbar!");
-            }
         }
     </script>
 </body>
